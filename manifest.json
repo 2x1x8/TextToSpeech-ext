@@ -1,28 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "AI Quiz Assistant",
+  "name": "SelectSpeak",
   "version": "1.0",
-  "description": "Automatically answers quiz questions using AI",
+  "description": "Read selected webpage text aloud.",
   "permissions": [
-    "activeTab",
-    "storage",
-    "scripting"
-  ],
-  "host_permissions": [
-    "https://api.deepseek.com/*"
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "AI Quiz Assistant"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
+    "tts",
+    "contextMenus"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SelectSpeak"
   }
 }

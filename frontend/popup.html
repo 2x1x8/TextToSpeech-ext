@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SelectSpeak</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>SelectSpeak</h1>
+
+  <div class="setting-group">
+    <label for="speedSlider">Speech Speed</label>
+
+    <input
+      type="range"
+      id="speedSlider"
+      min="0.5"
+      max="2"
+      step="0.1"
+      value="1"
+    >
+
+    <p id="speedValue">1.0x</p>
+  </div>
+
+  <button id="stopButton">Stop Reading</button>
+
+  <p id="statusText">Select text on a webpage, then right-click to read.</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

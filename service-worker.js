@@ -1,3 +1,59 @@
+const languages = {
+  af: "Afrikaans",
+  ar: "Arabic",
+  bg: "Bulgarian",
+  bn: "Bengali",
+  ca: "Catalan",
+  cs: "Czech",
+  da: "Danish",
+  de: "German",
+  el: "Greek",
+  en: "English",
+  es: "Spanish",
+  et: "Estonian",
+  fa: "Persian",
+  fi: "Finnish",
+  fil: "Filipino",
+  fr: "French",
+  gu: "Gujarati",
+  he: "Hebrew",
+  hi: "Hindi",
+  hr: "Croatian",
+  hu: "Hungarian",
+  id: "Indonesian",
+  it: "Italian",
+  ja: "Japanese",
+  kn: "Kannada",
+  ko: "Korean",
+  lt: "Lithuanian",
+  lv: "Latvian",
+  ml: "Malayalam",
+  mr: "Marathi",
+  ms: "Malay",
+  nl: "Dutch",
+  no: "Norwegian",
+  pa: "Punjabi",
+  pl: "Polish",
+  pt: "Portuguese",
+  ro: "Romanian",
+  ru: "Russian",
+  sk: "Slovak",
+  sl: "Slovenian",
+  sr: "Serbian",
+  sv: "Swedish",
+  sw: "Swahili",
+  ta: "Tamil",
+  te: "Telugu",
+  th: "Thai",
+  tr: "Turkish",
+  uk: "Ukrainian",
+  ur: "Urdu",
+  vi: "Vietnamese",
+  zh: "Chinese",
+  "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)"
+};
+
 let availableVoices = []; // Check if voices are available
 
 function loadVoices() {
@@ -9,7 +65,7 @@ function loadVoices() {
   });
 }
 
-loadVoices();
+
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -20,90 +76,20 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 // when extension is reloaded/installed, create a right-click menu item named "Read selected text" (ONLY IF user highlight/select text)
 
-function detectLanguage(text) {
-  const sample = text.trim();
-
-  if(!sample) {
-    return {
+async function detectLanguage() {
+  let res = {
       code: "Unknown",
       name: "Unknown"
-    };
-  }
-
-  if (/[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i.test(sample)) {
-    return {
-      code: "vi",
-      name: "Vietnamese"
-    };
-  }
-
-  if (/[\uAC00-\uD7AF]/.test(sample)) {
-    return {
-      code: "ko",
-      name: "Korean"
-    };
-  }
-
-  if (/[\u3040-\u30FF]/.test(sample)) {
-    return {
-      code: "ja",
-      name: "Japanese"
-    };
-  }
-
-  if (/[\u4E00-\u9FFF]/.test(sample)) {
-    return {
-      code: "zh",
-      name: "Chinese"
-    };
-  }
-
-  if (/[\u0600-\u06FF]/.test(sample)) {
-    return {
-      code: "ar",
-      name: "Arabic"
-    };
-  }
-
-  if (/[\u0590-\u05FF]/.test(sample)) {
-    return {
-      code: "he",
-      name: "Hebrew"
-    };
-  }
-
-  if (/[\u0E00-\u0E7F]/.test(sample)) {
-    return {
-      code: "th",
-      name: "Thai"
-    };
-  }
-
-  if (/[\u0400-\u04FF]/.test(sample)) {
-    return {
-      code: "ru",
-      name: "Cyrillic language"
-    };
-  }
-
-  if (/[\u0370-\u03FF]/.test(sample)) {
-    return {
-      code: "el",
-      name: "Greek"
-    };
-  }
-
-  if (/[\u0900-\u097F]/.test(sample)) {
-    return {
-      code: "hi",
-      name: "Hindi / Devanagari"
-    };
-  }
-
-  return {
-    code: "en",
-    name: "English / Latin text"
   };
+  let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  let language = await chrome.tabs.detectLanguage(tab.id)
+  if (language !== "und") {
+    res = {
+      code: language,
+      name: languages[language]
+    }
+  };
+  return res
 }
 
 function findBestVoice(languageCode) {
@@ -114,11 +100,12 @@ function findBestVoice(languageCode) {
   const lowerCode = languageCode.toLowerCase();
   // normalize lang code to lowercase for comparison since microsoft edge tts voices have lang codes in lowercase, while chrome tts voices have lang codes in uppercase.
 
+  console.log('stuka', availableVoices)
   const exactMatch = availableVoices.find((voice) => {
     return voice.lang && voice.lang.toLowerCase() === lowerCode;
   });
   // check for exact match in array, return boolean value
-
+  console.log('blius', languageCode,exactMatch)
   if (exactMatch) {
     return exactMatch;
   }
@@ -140,22 +127,23 @@ function findBestVoice(languageCode) {
     return containsMatch;
   }
   // fallback: if no exact or startsWith match found, check if any voice lang code contains detected lang code, return boolean value
-
+  console.log('fahhh')
   return null;
 }
 
 
 chrome.contextMenus.onClicked.addListener((info) => {
-  if (info.menuItemId === "read-selected-text") {
+  loadVoices();
+  if (info.menuItemId === "read-selected-text") {(async () => {
     const selectedText = info.selectionText;
 
     if (!selectedText || selectedText.trim() === "") {
       return;
     }
 
-    const detectedLanguage = detectLanguage(selectedText);
+    const detectedLanguage = await detectLanguage();
     const bestVoice = findBestVoice(detectedLanguage.code);
-
+    console.log('bluh', bestVoice)
     console.log("Selected text:", selectedText);
     console.log("Detected language:", detectedLanguage);
     console.log("Best voice:", bestVoice);
@@ -180,5 +168,5 @@ chrome.contextMenus.onClicked.addListener((info) => {
         volume: 1.0
       });
     });
-  }
+  })();}
 }); // Reload voices when the extension is used

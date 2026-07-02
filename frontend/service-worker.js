@@ -1,4 +1,4 @@
-let availableVoices = []; // Check if voices are available
+let  availableVoices = []; // Check if voices are available
 
 function loadVoices() {
   chrome.tts.getVoices((voices) => {

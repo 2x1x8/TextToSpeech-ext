@@ -17,3 +17,24 @@ button {
   border-radius: 6px;
   cursor: pointer;
 }
+
+.setting-group {
+  margin-bottom: 12px;
+}
+
+.setting-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+#speedSlider {
+  width: 100%;
+}
+
+#speedValue {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #444;
+}

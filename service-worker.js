@@ -159,20 +159,26 @@ chrome.contextMenus.onClicked.addListener((info) => {
     console.log("Selected text:", selectedText);
     console.log("Detected language:", detectedLanguage);
     console.log("Best voice:", bestVoice);
+    
+    chrome.storage.sync.get(["speechRate"], (result) => {
+      const speechRate = result.speechRate || 1.0;
 
-    chrome.tts.stop();
+      console.log("Using speech rate:", speechRate); // debug
 
-    chrome.tts.speak(selectedText, {
-      voiceName: bestVoice ? bestVoice.voiceName : undefined, //(equivalent to this code below)
-      // let selectedVoiceName;
-      // if (bestVoice) {
-      //   selectedVoiceName = bestVoice.voiceName;
-      // } else {
-      //   selectedVoiceName = undefined;
-      // } 
-      rate: 1.0,
-      pitch: 1.0,
-      volume: 1.0
+      chrome.tts.stop();
+
+      chrome.tts.speak(selectedText, {
+        voiceName: bestVoice ? bestVoice.voiceName : undefined, //(equivalent to this code below)
+        // let selectedVoiceName;
+        // if (bestVoice) {
+        //   selectedVoiceName = bestVoice.voiceName;
+        // } else {
+        //   selectedVoiceName = undefined;
+        // } 
+        rate: speechRate, // use the saved speech rate from storage
+        pitch: 1.0,
+        volume: 1.0
+      });
     });
   }
 }); // Reload voices when the extension is used

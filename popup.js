@@ -36,13 +36,6 @@ function displayText(text) {
   container.innerHTML = text;
 }
 
-// Get AI answer for specific question
-function getAIAnswerForQuestion() {
-  console.log("abcd");
-  chrome.runtime.sendMessage({ action: "ask"}, (response) => {
-    console.log("afg");
-  });
-}
 
 // Select answer for question on the webpag
 

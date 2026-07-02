@@ -1,140 +1,47 @@
-let currentQuestions = [];
-let instruction = "";
-document.getElementById("scan").addEventListener("click", () => {
+document.getElementById("actionBtn").addEventListener("click", () => {
+  console.log('safd')
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     console.log(tabs[0]);
-    chrome.tabs.sendMessage(tabs[0].id, { action: "scanPage" }, (response) => {
+    chrome.tabs.sendMessage(tabs[0].id, { action: "getText" }, (response) => {
       if (chrome.runtime.lastError) {
-        showError("Please refresh the quiz page and try again.");
+        alert("Please refresh the quiz page and try again.");
       } else {
         setTimeout(() => {
-          chrome.tabs.sendMessage(tabs[0].id, { action: "getQuestions" }, (response) => {
-            if (response?.questions) {
-              displayQuestions(response.questions);
-              showSuccess(`Loaded ${response.questions.length} question(s)`);
-            } else {
-              showError("No questions found. Make sure you're on a quiz page.");
-            }
-          });
+          displayText(response.text)
         }, 500);
       }
     });
   });
 });
 
-
-// Load questions button
-document.getElementById("answerAll").addEventListener("click", () => { 
-  console.log(currentQuestions); 
-  getAIAnswerForQuestion();
+document.getElementById("speak").addEventListener("click", () => {
+  let text = document.getElementById("displayer").innerText
+  chrome.tts.getVoices(function(voices) {
+    console.log(voices);
+  });
+  chrome.tts.speak(text, {
+  'lang': 'vi-VN',
+  'rate': 1.0,
+  'onEvent': function(event) {
+    if (event.type === 'error') {
+      console.error('TTS Error: ' + event.errorMessage);
+    }
+  }
+});
 });
 
 // Display questions in the popup
-function displayQuestions(questions) {
-  currentQuestions = questions;
-  const container = document.getElementById("questionsContainer");
-  container.innerHTML = "";
-  
-  if (questions.length === 0) {
-    container.innerHTML = "<p>No questions found on this page.</p>";
-    return;
-  }
-  
-  questions.forEach((q, index) => {
-    const questionDiv = document.createElement("div");
-    questionDiv.className = "question-item";
-    console.log(q.question)
-    questionDiv.innerHTML = `
-      <div class="question-header">
-        <strong>Question ${index + 1}:</strong>
-        <span class="status" id="status${index}">Ready</span>
-      </div>
-      <div class="question-text">${escapeHtml(q.question)}</div>
-      <div class="answers">
-        ${q.answers && q.answers.length > 0 ? 
-          q.answers.map((a, i) => 
-            `<div class="answer-option" data-q="${index}" data-a="${i}">
-              <input type="radio" name="q${index}" id="q${index}a${i}">
-              <label for="q${index}a${i}">${escapeHtml(a)}</label>
-            </div>`
-          ).join('') : 
-          '<p>No answer options detected</p>'
-        }
-      </div>
-      <div class="ai-answer" id="aiAnswer${index}"></div>
-      <div class="btn-group">
-        <button class="btn btn-secondary btn-get-answer" data-index="${index}">Get AI Answer</button>
-        <button class="btn btn-secondary btn-select-answer" data-index="${index}">Select This Answer</button>
-      </div>
-    `;
-    container.appendChild(questionDiv);
-  });
-  
-  // Add event listeners for get answer buttons
-  document.querySelectorAll('.btn-get-answer').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const index = parseInt(e.target.dataset.index);
-      getAIAnswerForQuestion(index);
-    });
-  });
-  
-  // Add event listeners for select answer buttons
-  document.querySelectorAll('.btn-select-answer').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const index = parseInt(e.target.dataset.index);
-      selectAnswerForQuestion(index);
-    });
-  });
-  
-  // Add event listeners for answer selection
-  document.querySelectorAll('.answer-option').forEach(option => {
-    option.addEventListener('click', (e) => {
-      const qIndex = parseInt(e.currentTarget.dataset.q);
-      const aIndex = parseInt(e.currentTarget.dataset.a);
-      const radio = e.currentTarget.querySelector('input[type="radio"]');
-      radio.checked = !radio.checked;
-      
-      // Update status
-      document.getElementById(`status${qIndex}`).textContent = "Selected";
-      document.getElementById(`status${qIndex}`).className = "status manual";
-    });
-  });
+function displayText(text) {
+  const container = document.getElementById("displayer");
+  container.innerHTML = text;
 }
 
-// Get AI answer for specific question
-function getAIAnswerForQuestion() {
-  console.log("abcd");
-  chrome.runtime.sendMessage({ action: "ask"}, (response) => {
-    console.log("afg");
-  });
-}
 
-// Select answer for question on the webpage
-
-
-// Helper function to escape HTML
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Select answer for question on the webpag
 
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   // Always show main section since API key is hardcoded
-  document.querySelector('.api-status').style.display = 'block';
-  
   // Check if we're on a quiz page by scanning for questions
-  setTimeout(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, { action: "getQuestions" }, (response) => {
-        console.log(response);
-        instruction = response.instruction;
-        if (response?.questions && response.questions.length > 0) {
-          displayQuestions(response.questions);
-        }
-      });
-    });
-  }, 500);
 });

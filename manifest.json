@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "AI Quiz Assistant",
+  "name": "texttospeech",
   "version": "1.0",
   "description": "Automatically answers quiz questions using AI",
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "tts"
   ],
   "host_permissions": [
     "https://api.deepseek.com/*"

@@ -1,0 +1,48 @@
+/* Container for the floating action bubble */
+.vbee-mini-btn {
+  position: absolute;
+  z-index: 2147483647; /* Keeps it layered on top of any website layout */
+  width: 36px;
+  height: 36px;
+  background-color: #007bff;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+}
+
+/* Instantly transitions into view when text is highlighted */
+.vbee-mini-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+/* Slight tactile pop on hover */
+.vbee-mini-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.08);
+}
+
+/* Minimalist Speaker Shape Icon */
+.vbee-mini-icon {
+  font-size: 18px; /* Control the size of your icon/emoji here */
+  line-height: 1;
+  user-select: none;
+}
+
+.vbee-mini-icon::before{
+    content: '🔊';
+}
+
+.vbee-mini-icon::after{
+    display: none;
+}
+
+

@@ -182,3 +182,34 @@ chrome.contextMenus.onClicked.addListener((info) => {
     });
   }
 }); // Reload voices when the extension is used
+
+// Helper function to process language logic and speak text (shares logic with context menu)
+function processAndSpeak(textToRead) {
+  const detectedLanguage = detectLanguage(textToRead);
+  const bestVoice = findBestVoice(detectedLanguage.code);
+
+  console.log("Selected text:", textToRead);
+  console.log("Detected language:", detectedLanguage);
+  console.log("Best voice:", bestVoice);
+  
+  chrome.storage.sync.get(["speechRate"], (result) => {
+    const speechRate = result.speechRate || 1.0;
+    console.log("Using speech rate:", speechRate);
+
+    chrome.tts.stop();
+
+    chrome.tts.speak(textToRead, {
+      voiceName: bestVoice ? bestVoice.voiceName : undefined,
+      rate: speechRate,
+      pitch: 1.0,
+      volume: 1.0
+    });
+  });
+}
+
+// 4. Listen for message signals fired from your new floating bubble button
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "speakSelection") {
+    processAndSpeak(request.text);
+  }
+});

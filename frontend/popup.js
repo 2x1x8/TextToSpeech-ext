@@ -1,180 +1,229 @@
-const voiceMode = document.getElementById("voiceMode");
-const voiceSelect = document.getElementById("voiceSelect");
-const selectedVoiceText = document.getElementById("selectedVoiceText");
+const PREVIEW_TEXT = "Hello, this is a voice preview.";
+const DEFAULT_SETTINGS = {
+  voiceMode: "auto",
+  selectedVoiceName: "auto",
+  speechRate: 1.0
+};
 
-const previewButton = document.getElementById("previewButton");
-const stopButton = document.getElementById("stopButton");
-const speakButton = document.getElementById("speakButton");
+const elements = {
+  voiceMode: document.getElementById("voiceMode"),
+  voiceSelect: document.getElementById("voiceSelect"),
+  selectedVoiceText: document.getElementById("selectedVoiceText"),
+  previewButton: document.getElementById("previewButton"),
+  stopButton: document.getElementById("stopButton"),
+  speakButton: document.getElementById("speakButton"),
+  speedSlider: document.getElementById("speedSlider"),
+  speedValue: document.getElementById("speedValue"),
+  languageText: document.getElementById("languageText"),
+  statusText: document.getElementById("statusText")
+};
 
-const speedSlider = document.getElementById("speedSlider");
-const speedValue = document.getElementById("speedValue");
+let availableVoices = [];
 
-const languageText = document.getElementById("languageText");
-const statusText = document.getElementById("statusText");
-
-let availableVoices = []; // VOICE STORAGE
+function setStatus(message) {
+  elements.statusText.textContent = message;
+}
 
 function updateSpeedText(rate) {
-  speedValue.textContent = `${Number(rate).toFixed(1)}x`;
-} // Update the visible speed label in the popup
+  elements.speedValue.textContent = `${Number(rate).toFixed(1)}x`;
+}
 
-function updateSelectedVoiceText() {
-  if (voiceMode.value === "auto" || voiceSelect.value === "auto") {
-    selectedVoiceText.textContent = "Auto choose best voice";
-    return;
-  } 
-
-  const selectedVoice = availableVoices.find((voice) => {
-    return voice.voiceName === voiceSelect.value;
+function getSelectedVoice() {
+  return availableVoices.find((voice) => {
+    return voice.voiceName === elements.voiceSelect.value;
   });
+}
 
-  if (selectedVoice) {
-    selectedVoiceText.textContent = `${selectedVoice.voiceName} (${selectedVoice.lang})`;
-  } else {
-    selectedVoiceText.textContent = "Auto choose best voice";
+function updateSelectedVoiceText(voice = getSelectedVoice()) {
+  if (elements.voiceMode.value === "auto" || elements.voiceSelect.value === "auto") {
+    elements.selectedVoiceText.textContent = "Auto choose best voice";
+    return;
   }
+
+  elements.selectedVoiceText.textContent = SelectSpeak.getVoiceLabel(voice);
 }
 
 function updateVoiceSelectState() {
-  if (voiceMode.value === "auto") {
-    voiceSelect.disabled = true;
-    voiceSelect.value = "auto";
-  } else {
-    voiceSelect.disabled = false;
+  const isAutoMode = elements.voiceMode.value === "auto";
+
+  elements.voiceSelect.disabled = isAutoMode;
+
+  if (isAutoMode) {
+    elements.voiceSelect.value = "auto";
   }
 
   updateSelectedVoiceText();
 }
 
+function saveSettings(settings) {
+  chrome.storage.sync.set(settings);
+}
+
 function restoreSavedSettings() {
-  chrome.storage.sync.get(
-    ["voiceMode", "selectedVoiceName", "speechRate"], //Retrieve saved settings from storage
-    (result) => {
-      const savedVoiceMode = result.voiceMode || "auto"; 
-      const savedVoiceName = result.selectedVoiceName || "auto"; 
-      const savedRate = result.speechRate || 1.0;
-      // if available => use, if not => default values
+  chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS), (savedSettings) => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      ...savedSettings
+    };
 
-      voiceMode.value = savedVoiceMode; 
-      voiceSelect.value = savedVoiceName;
-      speedSlider.value = savedRate;
-      // updating UI elements with saved ones
+    elements.voiceMode.value = settings.voiceMode;
+    elements.voiceSelect.value = settings.selectedVoiceName;
+    elements.speedSlider.value = settings.speechRate;
 
-      updateSpeedText(savedRate);
-      updateVoiceSelectState();
+    updateSpeedText(settings.speechRate);
+    updateVoiceSelectState();
 
-      languageText.textContent = "Auto";
-      statusText.textContent = "Settings loaded.";
-    }
-  );
+    elements.languageText.textContent = "Auto";
+    setStatus("Settings loaded.");
+  });
+}
+
+function addVoiceOption(value, label) {
+  const option = document.createElement("option");
+
+  option.value = value;
+  option.textContent = label;
+  elements.voiceSelect.appendChild(option);
+}
+
+function populateVoiceOptions() {
+  elements.voiceSelect.replaceChildren();
+  addVoiceOption("auto", "Auto choose best voice");
+
+  availableVoices.forEach((voice) => {
+    addVoiceOption(voice.voiceName, SelectSpeak.getVoiceLabel(voice));
+  });
 }
 
 function loadVoices() {
   chrome.tts.getVoices((voices) => {
     availableVoices = voices;
-
-    voiceSelect.innerHTML = "";
-
-    const autoOption = document.createElement("option");
-    autoOption.value = "auto";
-    autoOption.textContent = "Auto choose best voice";
-    voiceSelect.appendChild(autoOption);
-
-    availableVoices.forEach((voice) => {
-      const option = document.createElement("option");
-
-      option.value = voice.voiceName;
-      option.textContent = `${voice.voiceName} (${voice.lang})`;
-
-      voiceSelect.appendChild(option);
-    });
-
+    populateVoiceOptions();
     restoreSavedSettings();
   });
 }
 
-voiceMode.addEventListener("change", () => {
-  const selectedMode = voiceMode.value;
+function getCurrentTab() {
+  return chrome.tabs.query({
+    active: true,
+    currentWindow: true
+  }).then((tabs) => tabs[0]);
+}
 
-  if (selectedMode === "auto") {
-    voiceSelect.value = "auto";
+async function getSelectedTextFromPage() {
+  const tab = await getCurrentTab();
+  const response = await chrome.tabs.sendMessage(tab.id, {
+    action: "getSelectedText"
+  });
 
-    chrome.storage.sync.set({
-      voiceMode: "auto",
-      selectedVoiceName: "auto"
-    });
-  } else {
-    chrome.storage.sync.set({
-      voiceMode: "manual"
-    });
+  return (response?.text || "").trim();
+}
+
+function getConfiguredVoiceName(detectedLanguage) {
+  if (elements.voiceMode.value === "manual" && elements.voiceSelect.value !== "auto") {
+    updateSelectedVoiceText();
+
+    return {
+      voiceName: elements.voiceSelect.value,
+      status: "Reading with manually selected voice."
+    };
   }
 
-  updateVoiceSelectState();
+  const bestVoice = SelectSpeak.findBestVoice(availableVoices, detectedLanguage.code);
 
-  statusText.textContent = `Voice mode set to ${selectedMode}.`;
-  console.log("Saved voice mode:", selectedMode);
+  if (!bestVoice) {
+    elements.selectedVoiceText.textContent = "No matching voice found";
+
+    return {
+      voiceName: undefined,
+      status: "No matching voice found. Using default voice."
+    };
+  }
+
+  elements.selectedVoiceText.textContent = SelectSpeak.getVoiceLabel(bestVoice);
+
+  return {
+    voiceName: bestVoice.voiceName,
+    status: "Reading with auto-detected voice."
+  };
+}
+
+function speak(text, voiceName, rate) {
+  chrome.tts.stop();
+  chrome.tts.speak(text, SelectSpeak.getSpeechOptions({ rate, voiceName }));
+}
+
+elements.voiceMode.addEventListener("change", () => {
+  const selectedMode = elements.voiceMode.value;
+  const settings = {
+    voiceMode: selectedMode
+  };
+
+  if (selectedMode === "auto") {
+    settings.selectedVoiceName = "auto";
+    elements.voiceSelect.value = "auto";
+  }
+
+  saveSettings(settings);
+  updateVoiceSelectState();
+  setStatus(`Voice mode set to ${selectedMode}.`);
 });
 
-voiceSelect.addEventListener("change", () => {
-  const selectedVoiceName = voiceSelect.value;
-
-  chrome.storage.sync.set({
-    selectedVoiceName: selectedVoiceName
+elements.voiceSelect.addEventListener("change", () => {
+  saveSettings({
+    selectedVoiceName: elements.voiceSelect.value
   });
 
   updateSelectedVoiceText();
-
-  statusText.textContent = "Selected voice saved.";
-  console.log("Saved selected voice:", selectedVoiceName);
+  setStatus("Selected voice saved.");
 });
 
-speedSlider.addEventListener("input", () => {
-  const selectedRate = Number(speedSlider.value);
+elements.speedSlider.addEventListener("input", () => {
+  const selectedRate = Number(elements.speedSlider.value);
 
   updateSpeedText(selectedRate);
-
-  chrome.storage.sync.set({
+  saveSettings({
     speechRate: selectedRate
   });
-
-  statusText.textContent = `Speed set to ${selectedRate.toFixed(1)}x.`;
-  console.log("Saved speech rate:", selectedRate);
+  setStatus(`Speed set to ${selectedRate.toFixed(1)}x.`);
 });
 
-previewButton.addEventListener("click", () => {
-  const selectedVoiceName = voiceSelect.value;
-  const selectedRate = Number(speedSlider.value);
+elements.previewButton.addEventListener("click", () => {
+  const selectedRate = Number(elements.speedSlider.value);
+  const selectedVoiceName =
+    elements.voiceMode.value === "manual" && elements.voiceSelect.value !== "auto"
+      ? elements.voiceSelect.value
+      : undefined;
 
+  speak(PREVIEW_TEXT, selectedVoiceName, selectedRate);
+  setStatus(selectedVoiceName ? "Previewing selected voice." : "Previewing default voice.");
+});
+
+elements.stopButton.addEventListener("click", () => {
   chrome.tts.stop();
+  setStatus("Stopped.");
+});
 
-  if (voiceMode.value === "auto" || selectedVoiceName === "auto") {
-    chrome.tts.speak("Hello, this is a voice preview.", {
-      rate: selectedRate,
-      pitch: 1.0,
-      volume: 1.0
-    });
+elements.speakButton.addEventListener("click", async () => {
+  try {
+    const selectedText = await getSelectedTextFromPage();
 
-    statusText.textContent = "Previewing default voice.";
-    return;
+    if (!selectedText) {
+      setStatus("Please select text on the page first.");
+      return;
+    }
+
+    const detectedLanguage = SelectSpeak.detectLanguage(selectedText);
+    const selectedRate = Number(elements.speedSlider.value);
+    const selectedVoice = getConfiguredVoiceName(detectedLanguage);
+
+    elements.languageText.textContent = `${detectedLanguage.name} (${detectedLanguage.code})`;
+    speak(selectedText, selectedVoice.voiceName, selectedRate);
+    setStatus(selectedVoice.status);
+  } catch (error) {
+    console.error(error);
+    setStatus("Cannot read this page. Refresh the page and try again.");
   }
-
-  chrome.tts.speak("Hello, this is a voice preview.", {
-    voiceName: selectedVoiceName,
-    rate: selectedRate,
-    pitch: 1.0,
-    volume: 1.0
-  });
-
-  statusText.textContent = "Previewing selected voice.";
-});
-
-stopButton.addEventListener("click", () => {
-  chrome.tts.stop();
-  statusText.textContent = "Stopped.";
-});
-
-speakButton.addEventListener("click", () => {
-  statusText.textContent = "Speak Selected Text will be connected next.";
 });
 
 loadVoices();

@@ -1,29 +1,46 @@
 {
   "manifest_version": 3,
+<<<<<<< HEAD
   "name": "texttospeech",
+=======
+  "name": "SelectSpeak",
+>>>>>>> quocanhV2
   "version": "1.0",
-  "description": "Automatically answers quiz questions using AI",
+  "description": "Read selected webpage text aloud.",
   "permissions": [
-    "activeTab",
+    "tts",
+    "contextMenus",
     "storage",
+<<<<<<< HEAD
     "scripting",
     "tts"
+=======
+    "activeTab"
+>>>>>>> quocanhV2
   ],
-  "host_permissions": [
-    "https://api.deepseek.com/*"
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "AI Quiz Assistant"
+  "background": {
+    "service_worker": "service-worker.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "js": ["content.js"]
     }
   ],
-  "background": {
-    "service_worker": "background.js"
+  "action": {
+  "default_popup": "popup.html",
+  "default_title": "SelectSpeak",
+  "default_icon": {
+    "16": "icons/16x16.png",
+    "32": "icons/32x32.png",
+    "48": "icons/48x48.png",
+    "128": "icons/128x128.png"
   }
+},
+"icons": {
+  "16": "icons/16x16.png",
+  "32": "icons/32x32.png",
+  "48": "icons/48x48.png",
+  "128": "icons/128x128.png"
+}
 }

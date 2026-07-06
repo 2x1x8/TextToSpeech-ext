@@ -1,22 +1,13 @@
 {
   "manifest_version": 3,
-<<<<<<< HEAD
-  "name": "texttospeech",
-=======
   "name": "SelectSpeak",
->>>>>>> quocanhV2
   "version": "1.0",
   "description": "Read selected webpage text aloud.",
   "permissions": [
     "tts",
     "contextMenus",
     "storage",
-<<<<<<< HEAD
-    "scripting",
-    "tts"
-=======
     "activeTab"
->>>>>>> quocanhV2
   ],
   "background": {
     "service_worker": "service-worker.js"

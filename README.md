@@ -1,14 +1,14 @@
 # SelectSpeak
 
-SelectSpeak is a browser extension backed by a Node.js/Express API. The extension captures selected page text and sends it to the backend. The backend uses Gemini to detect the language, then generates speech with Gemini TTS and can fall back to ElevenLabs for quota/rate-limit/server failures. The browser never receives provider API keys.
+SelectSpeak is a browser extension backed by a Node.js/Express API. The extension sends page text to a secure backend for language detection and speech generation. The backend uses Gemini for language detection and TTS, with ElevenLabs available as a fallback for quota, rate-limit, or server failures. The browser never receives provider API keys.
 
 ## Backend
 
 ```powershell
 cd backend
 npm install
-Copy-Item .env.example .env
-# Fill GEMINI_API_KEY and optional ElevenLabs fallback settings in .env
+New-Item .env -ItemType File
+notepad .env
 npm run dev
 ```
 
@@ -33,4 +33,4 @@ PORT=3000
 
 ## Extension
 
-Load the `frontend` directory as an unpacked Chrome extension. Select text on a webpage, then use the popup or the context menu to play backend-generated speech.
+Load the `frontend` directory as an unpacked Chrome extension. Use the popup or context menu to generate backend-powered speech playback.

@@ -1,4 +1,4 @@
-﻿const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS = {
   speechRate: 1.0
 };
 
@@ -169,7 +169,7 @@ async function detectLanguageForText(text) {
 
 function getSpeechPreferences() {
   return {
-    provider: "elevenlabs",
+    provider: "auto",
     rate: Number(elements.speedSlider.value)
   };
 }

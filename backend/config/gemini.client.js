@@ -23,7 +23,10 @@ export async function createGeminiInteraction(payload) {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Gemini request failed (${response.status}): ${errorBody}`);
+    const error = new Error(`Gemini request failed (${response.status}): ${errorBody}`);
+    error.status = response.status;
+    error.body = errorBody;
+    throw error;
   }
 
   return response.json();

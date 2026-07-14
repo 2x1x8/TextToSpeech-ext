@@ -21,7 +21,7 @@
   };
 
   const BACKEND_VOICES = [
-    { voiceName: "configured", lang: "ElevenLabs" }
+    { voiceName: "auto", lang: "Gemini with ElevenLabs fallback" }
   ];
 
   const VOICE_BY_LANGUAGE = {
@@ -43,7 +43,7 @@
   }
 
   function getVoiceLabel(voice) {
-    return voice ? `Configured ${voice.lang} voice` : "Configured ElevenLabs voice";
+    return voice ? `Configured ${voice.lang} voice` : "Gemini with ElevenLabs fallback";
   }
 
   async function readErrorMessage(response) {

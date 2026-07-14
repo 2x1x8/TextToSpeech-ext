@@ -30,7 +30,7 @@ export async function generateSpeech(req, res) {
       preferences,
     });
 
-    const { audioBuffer, contentType } = await synthesizeSpeech({
+    const { audioBuffer, contentType, provider } = await synthesizeSpeech({
       text: normalizedText,
       language,
       voiceSelection,
@@ -41,7 +41,7 @@ export async function generateSpeech(req, res) {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Detected-Language-Code", language.code);
     res.setHeader("X-Detected-Language-Name", language.name);
-    res.setHeader("X-TTS-Provider", voiceSelection.provider);
+    res.setHeader("X-TTS-Provider", provider);
 
     return res.status(200).send(audioBuffer);
   } catch (error) {

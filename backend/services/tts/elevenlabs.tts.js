@@ -20,7 +20,10 @@ export async function listElevenLabsVoices() {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`ElevenLabs voices request failed (${response.status}): ${errorBody}`);
+    const error = new Error(`ElevenLabs voices request failed (${response.status}): ${errorBody}`);
+    error.status = response.status;
+    error.body = errorBody;
+    throw error;
   }
 
   const result = await response.json();
@@ -70,7 +73,10 @@ export async function generateElevenLabsSpeech({
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`ElevenLabs request failed (${response.status}): ${errorBody}`);
+    const error = new Error(`ElevenLabs request failed (${response.status}): ${errorBody}`);
+    error.status = response.status;
+    error.body = errorBody;
+    throw error;
   }
 
   return Buffer.from(await response.arrayBuffer());

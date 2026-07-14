@@ -1,4 +1,4 @@
-﻿importScripts("shared.js");
+importScripts("shared.js");
 
 function createContextMenu() {
   chrome.contextMenus.create({
@@ -18,7 +18,7 @@ function getSettings(callback) {
 
 function getPreferences(settings) {
   return {
-    provider: "elevenlabs",
+    provider: "auto",
     rate: settings.speechRate
   };
 }

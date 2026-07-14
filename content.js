@@ -1,3 +1,4 @@
+console.log('content script loaded')
 chrome.runtime.onMessage.addListener((message, sender, sendResponse)=>{
     console.log(message)
 		const audio = new Audio(

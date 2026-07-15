@@ -3,7 +3,7 @@
 }
 
 body {
-  width: 560px;
+  width: 300px;
   margin: 0;
   padding: 14px;
   font-family: Arial, sans-serif;
@@ -35,114 +35,59 @@ h1 {
   color: #6b7280;
 }
 
-.main-panel {
+/* ==========================================================================
+   Settings Panel (Dropdown Styling)
+   ========================================================================== */
+.settings-panel {
   display: flex;
-  gap: 16px;
-}
-
-.left-panel,
-.right-panel {
-  flex: 1;
-  min-width: 0;
-}
-
-.divider {
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, #9ca3af, transparent);
-}
-
-h2 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  text-align: center;
-}
-
-.info-line {
-  margin: 0 0 14px;
-}
-
-.label,
-.small-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 5px;
-}
-
-.value-pill,
-.speed-pill {
-  display: inline-block;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
-  font-size: 13px;
-  font-weight: 700;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px; /* Matches your layout structure spacing */
 }
 
 .setting-group {
-  margin-bottom: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .setting-group label {
-  display: block;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  margin-bottom: 6px;
-  color: #374151;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.5px;
 }
 
-select {
+.setting-group select {
   width: 100%;
-  padding: 9px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  background: #ffffff;
+  padding: 9px 11px;
   font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px; /* Synchronized with your button shapes */
+  background-color: #f9fafb;
+  color: #111827;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
-select:hover {
-  border-color: #6366f1;
+.setting-group select:focus {
+  border-color: #4f46e5; /* Accent color match */
+  background-color: #ffffff;
 }
 
-select:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
-}
-
-.preview-card {
-  min-height: 132px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #f9fafb;
-}
-
-#selectedVoiceText,
-#previewText,
-#statusText {
-  font-size: 13px;
-  line-height: 1.45;
-  color: #4b5563;
-}
-
-#selectedVoiceText {
-  margin: 0 0 12px;
-  font-weight: 600;
-}
-
-#previewText {
-  margin: 0;
-}
-
-.button-row button {
-  width: 100%;
+/* ==========================================================================
+   Action Layout Elements
+   ========================================================================== */
+.bottom-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 button {
+  width: 100%;
   border: none;
   border-radius: 10px;
   padding: 9px 11px;
@@ -161,15 +106,15 @@ button:active {
   box-shadow: none;
 }
 
-.secondary-button {
-  flex: 1;
-  background: #e0e7ff;
-  color: #3730a3;
+.primary-button {
+  background: #4f46e5;
+  color: #ffffff;
+  font-size: 14px;
 }
 
-.secondary-button:hover {
-  background: #c7d2fe;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+.primary-button:hover {
+  background: #4338ca;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
 }
 
 .danger-button {
@@ -182,43 +127,10 @@ button:active {
   box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
 }
 
-.primary-button {
-  width: 100%;
-  margin-top: 10px;
-  background: #4f46e5;
-  color: #ffffff;
-  font-size: 14px;
-}
-
-.primary-button:hover {
-  background: #4338ca;
-  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
-}
-
-.bottom-panel {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.speed-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#speedSlider {
-  width: 100%;
-  cursor: pointer;
-  accent-color: #4f46e5;
-}
-
 #statusText {
-  margin: 10px 0 0;
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #4b5563;
   text-align: center;
-}
-
-.full-width-button {
-  width: 100%;
-  margin-top: 8px;
 }

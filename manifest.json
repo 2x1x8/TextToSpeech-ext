@@ -3,6 +3,9 @@
   "name": "SelectSpeak",
   "version": "1.0",
   "description": "Read selected webpage text aloud.",
+  "host_permissions": [
+    "https://texttospeech.googleapis.com/*"
+  ],
   "permissions": [
     "tts",
     "contextMenus",
@@ -14,24 +17,28 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "action": {
-  "default_popup": "popup.html",
-  "default_title": "SelectSpeak",
-  "default_icon": {
+    "default_popup": "popup.html",
+    "default_title": "SelectSpeak",
+    "default_icon": {
+      "16": "icons/16x16.png",
+      "32": "icons/32x32.png",
+      "48": "icons/48x48.png",
+      "128": "icons/128x128.png"
+    }
+  },
+  "icons": {
     "16": "icons/16x16.png",
     "32": "icons/32x32.png",
     "48": "icons/48x48.png",
     "128": "icons/128x128.png"
   }
-},
-"icons": {
-  "16": "icons/16x16.png",
-  "32": "icons/32x32.png",
-  "48": "icons/48x48.png",
-  "128": "icons/128x128.png"
-}
 }

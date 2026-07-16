@@ -2,6 +2,7 @@ const stopButton = document.getElementById("stopButton");
 const speakButton = document.getElementById("speakButton");
 const statusText = document.getElementById("statusText");
 
+
 stopButton.addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (!tab) return;
@@ -28,8 +29,7 @@ speakButton.addEventListener("click", () => {
           if (chrome.runtime.lastError || !res?.success) {
             statusText.textContent = res?.error ?? "Failed to speak text.";
             return;
-          }
-          statusText.textContent = "Speaking...";
+          }else if(res.success){statusText.textContent = "Speaking..."};
         }
       );
     });

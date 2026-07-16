@@ -4,7 +4,8 @@
   "version": "1.0",
   "description": "Read selected webpage text aloud.",
   "host_permissions": [
-    "https://texttospeech.googleapis.com/*"
+    "https://texttospeech.googleapis.com/*",
+    "http://localhost:3000/*"
   ],
   "permissions": [
     "tts",

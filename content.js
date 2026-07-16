@@ -1,14 +1,24 @@
 let currentAudio = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'playAudio') {
+  if (message.action === "playAudio") {
+  (async () => {
     if (currentAudio) {
       currentAudio.pause();
-      currentAudio = null;
     }
-    currentAudio = new Audio(`data:audio/mp3;base64,${message.audio}`);
-    currentAudio.play().catch(err => console.error('Playback failed:', err));
-  }
+
+    try {
+      currentAudio = new Audio(`data:audio/mp3;base64,${message.audio}`);
+      await currentAudio.play();
+      sendResponse({ success: true });
+    } catch (error) {
+      currentAudio = null;
+      console.error("Playback failed:", error);
+      sendResponse({ success: false, error: error.message });
+    }
+  })();
+  return true;
+}
 
   if (message.action === 'stopAudio') {
     if (currentAudio) {

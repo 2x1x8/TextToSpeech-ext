@@ -69,7 +69,50 @@ const LANGUAGE_MAP = {
 };
 
 const DEFAULT_LANGUAGE = LANGUAGE_MAP.en;
+const PORT = process.env.PORT || 3000;
 
+async function getVoices(gender, lang) {
+  const language =
+    LANGUAGE_MAP[lang] ??
+    LANGUAGE_MAP[lang?.split("-")[0]] ??
+    DEFAULT_LANGUAGE;
+
+  const response = await fetch(
+    `https://texttospeech.googleapis.com/v1/voices?languageCode=${encodeURIComponent(language.languageCode)}&key=${process.env.GOOGLE_API_KEY}`
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error?.message ?? "Unable to retrieve Google TTS voices."
+    );
+  }
+
+  const requestedGender = gender?.toUpperCase();
+
+  return data.voices
+    .filter((voice) => {
+      const supportsLanguage = voice.languageCodes.includes(language.languageCode);
+      const matchesGender =
+        !requestedGender ||
+        requestedGender === "DEFAULT" ||
+        voice.ssmlGender === requestedGender;
+
+      return supportsLanguage && matchesGender;
+    })
+    .map((voice) => ({
+      name: voice.name,
+      gender: voice.ssmlGender,
+      languageCodes: voice.languageCodes,
+      sampleRate: voice.naturalSampleRateHertz
+    }));
+}
+
+app.get("/voices", async (req, res) => {
+  const voices = await getVoices(req.query.gender, req.query.lang);
+  res.json({ voices });
+});
 app.post("/tts", async (req, res) => {
   try {
     const { text, language } = req.body;
@@ -128,8 +171,6 @@ app.post("/tts", async (req, res) => {
     });
   }
 });
-
-const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

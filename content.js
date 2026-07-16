@@ -1,4 +1,7 @@
 let currentAudio = null;
+function isAudioPlaying(){
+  return Boolean(!currentAudio.ended && !currentAudio.paused && currentAudio)
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "playAudio") {
@@ -31,5 +34,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getSelectedText') {
     sendResponse({ text: window.getSelection().toString() });
     return true;
+  }
+
+  if (message.action === 'getAudioState'){
+    sendResponse(isAudioPlaying())
   }
 });

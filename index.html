@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mock News Site Testing</title>
+</head>
+<body>
+
+    <!-- CLUTTER: Header and Navigation -->
+    <header>
+        <h1>Fake News Network</h1>
+        <nav><a href="#">Home</a> | <a href="#">Politics</a> | <a href="#">Sports</a></nav>
+    </header>
+
+    <div style="display: flex;">
+        
+        <!-- MAIN ZONE: The actual article content -->
+        <main style="flex: 2; padding: 20px;">
+            <article>
+                <h1>Breaking News: Local AI Developer Automates Everything</h1>
+                <p class="meta">Published on July 6, 2026 by John Doe</p>
+                
+                <!-- CLUTTER: Inline Ad -->
+                <div class="ads" style="background: yellow; padding: 10px; margin: 10px 0;">
+                    SPONSORED: Buy these custom mechanical keyboards now! 50% OFF!
+                </div>
+
+                <!-- MAIN TEXT WE WANT -->
+                <p>Today, an independent software engineer successfully launched a custom text-to-speech engine pipeline. The system runs incredibly fast on consumer-grade hardware architectures.</p>
+                
+                <p>The developer stated that the primary goal of this project was to provide a smooth, ad-free listening experience for daily news tracking. Early beta testers have reported outstanding reliability.</p>
+
+                <p>Future iterations of this platform are expected to natively support edge deployments and lower latency execution boundaries.</p>
+            </article>
+        </main>
+
+        <!-- CLUTTER: Sidebar with ads and related links -->
+        <aside style="flex: 1; background: #eee; padding: 20px;">
+            <div class="sidebar">
+                <h3>Trending Stories</h3>
+                <ul>
+                    <li><a href="#">10 reasons why coffee is amazing</a></li>
+                    <li><a href="#">Is your cat plotting against you?</a></li>
+                </ul>
+                <div class="ads">ADVERTISEMENT: Click here to lose weight fast!</div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- CLUTTER: Footer -->
+    <footer>
+        <p>&copy; 2026 Fake News Network. All rights reserved privacy policy rules.</p>
+    </footer>
+
+    <!-- Load the parser tools -->
+    <script src="Readability.js"></script>
+    <script src="test_parser.js"></script>
+</body>
+</html>

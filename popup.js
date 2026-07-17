@@ -5,7 +5,7 @@ const languageSelect = document.getElementById("languageSelect");
 const genderSelect = document.getElementById("genderSelect");
 
 const DEFAULT_SETTINGS = {
-  gender: "FEMALE",
+  gender: "MALE",
   language: "auto",
   speed: 1.0,
   voice: "default",

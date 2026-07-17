@@ -7,6 +7,8 @@ if (!process.env.GOOGLE_API_KEY) {
   throw new Error("GOOGLE_API_KEY is missing. Add it to backend/.env.");
 }
 
+
+
 const app = express();
 
 app.use(cors());
@@ -71,6 +73,9 @@ const LANGUAGE_MAP = {
 const DEFAULT_LANGUAGE = LANGUAGE_MAP.en;
 const PORT = process.env.PORT || 3000;
 
+
+//-------------------------------------Functions--------------------------------------
+
 async function getVoices(gender, lang) {
   const language =
     LANGUAGE_MAP[lang] ??
@@ -78,7 +83,7 @@ async function getVoices(gender, lang) {
     DEFAULT_LANGUAGE;
 
   const response = await fetch(
-    `https://texttospeech.googleapis.com/v1/voices?languageCode=${encodeURIComponent(language.languageCode)}&key=${process.env.GOOGLE_API_KEY}`
+    `https://texttospeech.googleapis.com/v1beta1/voices?languageCode=${encodeURIComponent(language.languageCode)}&key=${process.env.GOOGLE_API_KEY}`
   );
 
   const data = await response.json();
@@ -109,13 +114,62 @@ async function getVoices(gender, lang) {
     }));
 }
 
+function escapeXml(value) {
+  return value.replace(/[<>&'"]/g, (character) => ({
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    "'": "&apos;",
+    '"': "&quot;"
+  })[character]);
+}
+
+function createTimedSsml(text) {
+  let index = 0;
+
+  const ssml = text.replace(/\S+/g, (word) => {
+    const mark = `<mark name="word-${index}"/>`;
+    index += 1;
+    return `${mark}${escapeXml(word)}`;
+  });
+
+  return {
+    ssml: `<speak>${ssml}</speak>`,
+    words: text.match(/\S+/g) ?? []
+  };
+}
+
+//-------------------------------------server routes-------------------------------------
+
+app.get("/languages", (req, res) => {
+  const languages = Object.entries(LANGUAGE_MAP).map(([code, language]) => ({
+    code,
+    name: language.name
+  }));
+
+  res.json({ languages });
+});
+
 app.get("/voices", async (req, res) => {
   const voices = await getVoices(req.query.gender, req.query.lang);
   res.json({ voices });
 });
 app.post("/tts", async (req, res) => {
   try {
-    const { text, language } = req.body;
+    const { text, language, gender } = req.body;
+    const voice =
+      LANGUAGE_MAP[language] ??
+      LANGUAGE_MAP[language?.split("-")[0]] ??
+      DEFAULT_LANGUAGE;
+    const voiceConfig = {
+      languageCode: voice.languageCode
+    };
+
+    if (gender === "MALE" || gender === "FEMALE") {
+      voiceConfig.ssmlGender = gender;
+    } else {
+      voiceConfig.name = voice.voiceName;
+    }
 
     if (typeof text !== "string" || text.trim() === "") {
       return res.status(400).json({
@@ -129,13 +183,14 @@ app.post("/tts", async (req, res) => {
       });
     }
 
-    const voice =
-      LANGUAGE_MAP[language] ??
-      LANGUAGE_MAP[language?.split("-")[0]] ??
-      DEFAULT_LANGUAGE;
+    
+
+    console.log(`fetching voice: ${voiceConfig.name}`)
+
+    const { ssml, words } = createTimedSsml(text);
 
     const googleResponse = await fetch(
-      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`,
+      `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -143,12 +198,10 @@ app.post("/tts", async (req, res) => {
         },
         body: JSON.stringify({
           input: {
-            text
+            ssml
           },
-          voice: {
-            languageCode: voice.languageCode,
-            name: voice.voiceName
-          },
+          enableTimePointing: ["SSML_MARK"],
+          voice: voiceConfig,
           audioConfig: {
             audioEncoding: "MP3"
           }
@@ -162,7 +215,11 @@ app.post("/tts", async (req, res) => {
       return res.status(googleResponse.status).json(data);
     }
 
-    res.json(data);
+    res.json({
+      audioContent: data.audioContent,
+      timepoints: data.timepoints ?? [],
+      words
+    });
 
   } catch (err) {
     console.error(err);

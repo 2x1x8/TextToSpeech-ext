@@ -1,12 +1,13 @@
 const DEFAULT_LANGUAGE = "en";
-async function fetchAudio(text, lang) {
+async function fetchAudio(text, lang, gender) {
   try {
     const response = await fetch("http://localhost:3000/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
-        language: lang
+        language: lang,
+        gender: gender
       })
     });
 
@@ -28,7 +29,9 @@ async function fetchAudio(text, lang) {
 
     return {
       success: true,
-      audioContent: data.audioContent
+      audioContent: data.audioContent,
+      timepoints: data.timepoints ?? [],
+      words: data.words ?? []
     };
   } catch (error) {
     return {
@@ -40,6 +43,21 @@ async function fetchAudio(text, lang) {
 async function detectLanguage(tabid) {
   const language = await chrome.tabs.detectLanguage(tabid)
   return language === "und"? DEFAULT_LANGUAGE : language;
+}
+async function speak(tabId, text, gender) {
+    const lang = await detectLanguage(tabId);
+
+    const audio = await fetchAudio(text, lang, gender);
+
+    if (!audio.success)
+        return audio;
+
+    return chrome.tabs.sendMessage(tabId, {
+        action: "playAudio",
+        audio: audio.audioContent,
+        timepoints: audio.timepoints,
+        words: audio.words
+    });
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -57,27 +75,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
   (async () => {
     try {
-      const selectedText = info.selectionText?.trim();
-
-      if (!selectedText) return;
-
-      const detectedLanguage = await detectLanguage(tab.id);
-      const audio = await fetchAudio(selectedText, detectedLanguage);
-
-      if (!audio.success) {
-        console.error("TTS request failed:", audio.error);
-        return;
-      }
-
-      const playback = await chrome.tabs.sendMessage(tab.id, {
-        action: "playAudio",
-        audio: audio.audioContent
+      const selection = await chrome.tabs.sendMessage(tab.id, {
+        action: "getSelectedText"
       });
 
-      if (!playback?.success) {
+      const selectedText = selection?.text?.trim();
+
+      console.log('selected text: ', selectedText)
+      if (!selectedText) return;
+
+      const result = await speak(tab.id, selectedText);
+
+      if (!result?.success) {
         console.error(
           "Playback failed:",
-          playback?.error ?? "No response from the page."
+          result?.error ?? "No response from the page."
         );
       }
     } catch (error) {
@@ -93,17 +105,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'speakText') {
     (async () => {
       try {
-        const detectedLanguage = await detectLanguage(message.tabId);
-        const audio = await fetchAudio(message.text, detectedLanguage);
-        if (!audio.success) {
-          sendResponse(audio);
-          return;
-        }
-        const res = await chrome.tabs.sendMessage(message.tabId, {
-          action: 'playAudio',
-          audio: audio.audioContent
-        });
-        sendResponse(res);
+        const result = await speak(message.tabId, message.text, message.gender);
+        sendResponse(result);
       } catch (err) {
         sendResponse({ success: false, error: err.message });
       }

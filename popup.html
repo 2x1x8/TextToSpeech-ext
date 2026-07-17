@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <title>SelectSpeak</title>
   <link rel="stylesheet" href="popup.css">
@@ -8,72 +8,40 @@
 <body>
   <div class="popup-container">
     <div class="header">
-      <div>
-        <h1>SelectSpeak</h1>
-        <p class="subtitle">Read selected text with smart voice control</p>
-      </div>
+      <h1>SelectSpeak</h1>
+      <p class="subtitle">Read selected text with smart voice control</p>
     </div>
 
-    <div class="main-panel">
-      <div class="left-panel">
-        <p class="info-line">
-          <span class="label">Detected Language</span>
-          <span id="languageText" class="value-pill">None yet</span>
-        </p>
-
-        <div class="setting-group">
-          <label for="voiceMode">Voice Mode</label>
-          <select id="voiceMode">
-            <option value="auto">Auto Detect</option>
-            <option value="manual">Manual Voice</option>
-          </select>
-        </div>
-
-        <div class="setting-group">
-          <label for="voiceSelect">Voice Options</label>
-          <select id="voiceSelect">
-            <option value="auto">Auto choose best voice</option>
-          </select>
-        </div>
+    <!-- New Voice Customization Settings -->
+    <div class="settings-panel">
+      <div class="setting-group">
+        <label for="languageSelect">Language</label>
+        <select id="languageSelect">
+          <option value="auto">Auto-detect</option>
+        </select>
+      </div>
+      
+      <div class="setting-group">
+        <label for="voiceSelect">Voice / Tier</label>
+        <select id="voiceSelect">
+          <option>wavenet</option>
+        </select>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="right-panel">
-        <h2>Voice Preview</h2>
-
-        <div class="preview-card">
-          <p class="small-label">Selected Voice</p>
-          <p id="selectedVoiceText">Auto choose best voice</p>
-
-          <p class="small-label">Preview Text</p>
-          <p id="previewText">Hello, this is a voice preview.</p>
-        </div>
-
-        <div class="button-row">
-          <button id="previewButton" class="secondary-button">Preview Voice</button>
-        </div>
+      <div class="setting-group">
+        <label for="genderSelect">Voice gender</label>
+        <select id="genderSelect">
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="NEUTRAL">Neutral</option>
+        </select>
       </div>
+      
     </div>
 
     <div class="bottom-panel">
-      <div class="setting-group">
-        <div class="speed-header">
-          <label for="speedSlider">Speed</label>
-          <span id="speedValue" class="speed-pill">1.0x</span>
-        </div>
-
-        <input
-          type="range"
-          id="speedSlider"
-          min="0.5"
-          max="2"
-          step="0.1"
-          value="1"
-        >
-      </div>
-        <button id="speakButton" class="primary-button">Speak Selected Text</button>
-        <button id="stopButton" class="danger-button full-width-button">Stop Reading</button>
+      <button id="speakButton" class="primary-button">Speak Selected Text</button>
+      <button id="stopButton" class="danger-button">Stop Reading</button>
       <p id="statusText">Select text on a webpage, then click Speak Selected Text.</p>
     </div>
   </div>

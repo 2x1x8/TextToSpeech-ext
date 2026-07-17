@@ -1,142 +1,127 @@
-const apiKey = 'AIzaSyBAD3k8DUrgFLdeiLsFsM8I6Tr68ciwsi4'
-const languages = {
-  af: "af-ZA",
-  ar: "ar-XA",
-  bg: "bg-BG",
-  bn: "bn-IN",
-  ca: "ca-ES",
-  cs: "cs-CZ",
-  da: "da-DK",
-  de: "de-DE",
-  el: "el-GR",
-  en: "en-US",
-  es: "es-ES",
-  et: "et-EE",
-  fa: "fa-IR",
-  fi: "fi-FI",
-  fil: "fil-PH",
-  fr: "fr-FR",
-  gu: "gu-IN",
-  he: "he-IL",
-  hi: "hi-IN",
-  hr: "hr-HR",
-  hu: "hu-HU",
-  id: "id-ID",
-  it: "it-IT",
-  ja: "ja-JP",
-  kn: "kn-IN",
-  ko: "ko-KR",
-  lt: "lt-LT",
-  lv: "lv-LV",
-  ml: "ml-IN",
-  mr: "mr-IN",
-  ms: "ms-MY",
-  nl: "nl-NL",
-  no: "nb-NO",
-  pa: "pa-IN",
-  pl: "pl-PL",
-  pt: "pt-BR",
-  ro: "ro-RO",
-  ru: "ru-RU",
-  sk: "sk-SK",
-  sl: "sl-SI",
-  sr: "sr-RS",
-  sv: "sv-SE",
-  sw: "sw-TZ",
-  ta: "ta-IN",
-  te: "te-IN",
-  th: "th-TH",
-  tr: "tr-TR",
-  uk: "uk-UA",
-  ur: "ur-PK",
-  vi: "vi-VN",
-  zh: "cmn-CN",
-  "zh-CN": "cmn-CN",
-  "zh-TW": "cmn-TW",
-};
-
-let availableVoices = []; // Check if voices are available
-
-
-
-async function fetchAudio(text, lang) {
-	console.log(`fetching audio for lang: ${lang} and text:${text}`)
-  const res = await fetch(
-    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
-    {
+const DEFAULT_LANGUAGE = "en";
+const DEFAULT_GENDER = "MALE"
+async function fetchAudio(text, language, gender) {
+  try {
+    const response = await fetch("http://localhost:3000/tts", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        input: { text },
-        voice: { 
-					languageCode: 'lang',
-					name :`${lang}-Wavenet-A`,  
-				},
-        audioConfig: {
-          audioEncoding: "MP3",
-        },
-      }),
+        text,
+        language: language,
+        gender: gender
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data?.error?.message ?? data?.error ?? "Unable to generate audio."
+      };
     }
-  );
 
-  const data = await res.json();
+    if (typeof data.audioContent !== "string" || !data.audioContent) {
+      return {
+        success: false,
+        error: "The TTS service returned no audio."
+      };
+    }
 
-  if (!res.ok) {
-    console.error(data);
-    return;
+    return {
+      success: true,
+      audioContent: data.audioContent,
+      timepoints: data.timepoints ?? [],
+      words: data.words ?? []
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message ?? "Could not reach the TTS server."
+    };
   }
-	return data
-  // Play the returned MP3
+}
+async function detectLanguage(tabid) {
+  let {language} = await chrome.storage.local.get({language: DEFAULT_LANGUAGE})
+  if (language === "auto"){ 
+    language = await chrome.tabs.detectLanguage(tabid)
+  }
+  return language === "und"? DEFAULT_LANGUAGE : language;
+}
+async function getGender(){
+  let {gender} = await chrome.storage.local.get({gender: DEFAULT_GENDER})
+  return gender
 }
 
+async function speak(tabId, text) {
 
+    const language = await detectLanguage(tabId);
+    const gender = await getGender()
+    const audio = await fetchAudio(text, language, gender);
 
+    if (!audio.success)
+        return audio;
 
+    return chrome.tabs.sendMessage(tabId, {
+        action: "playAudio",
+        audio: audio.audioContent,
+        timepoints: audio.timepoints,
+        words: audio.words
+    });
+}
 
 chrome.runtime.onInstalled.addListener(() => {
-	chrome.contextMenus.create({
-		id: "read-selected-text",
-		title: "Read selected text",
-		contexts: ["selection"]
-	});
+  chrome.contextMenus.create({
+    id: "read-selected-text",
+    title: "Read selected text",
+    contexts: ["selection"]
+  });
 });
 // when extension is reloaded/installed, create a right-click menu item named "Read selected text" (ONLY IF user highlight/select text)
 
-async function detectLanguage() {
-	let res = {
-		code: "Unknown",
-		name: "Unknown"
-	};
-	let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-	let language = await chrome.tabs.detectLanguage(tab.id)
-	if (language !== "und") {
-		res = {
-			code: language,
-			name: languages[language]
-		}
-	};
-	return res
-}
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-	if (info.menuItemId === "read-selected-text") {
-		(async () => {
-			const selectedText = info.selectionText;
-			const detectedLanguage = await detectLanguage();
-			console.log(selectedText)
-			if (!selectedText || selectedText.trim() === "") {
-				return;
-			}
-			let audio = await fetchAudio(selectedText, detectedLanguage.name)
-			let response = await chrome.tabs.sendMessage(tab.id, {
-				action: 'playAudio',
-				audio: audio.audioContent
-			})
-			console.log("Selected text:", selectedText);
-			console.log("Detected language:", detectedLanguage);
-		})();
-	}
-}); // Reload voices when the extension is used
+  if (info.menuItemId !== "read-selected-text" || !tab?.id) return;
+
+  (async () => {
+    try {
+      const selection = await chrome.tabs.sendMessage(tab.id, {
+        action: "getSelectedText"
+      });
+
+      const selectedText = selection?.text?.trim();
+
+      console.log('selected text: ', selectedText)
+      if (!selectedText) return;
+
+      const result = await speak(tab.id, selectedText);
+
+      if (!result?.success) {
+        console.error(
+          "Playback failed:",
+          result?.error ?? "No response from the page."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Could not read selected text:",
+        error.message ?? error
+      );
+    }
+  })();
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'speakText') {
+    (async () => {
+      try {
+        const result = await speak(message.tabId, message.text);
+        sendResponse(result);
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true; // Keep message channel open for async response
+  }
+});
 

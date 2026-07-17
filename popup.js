@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
   highlight: true
 };
 
+const settings = await chrome.storage.local.get(DEFAULT_SETTINGS);
+
 genderSelect.value = settings.gender;
 languageSelect.value = settings.language;
 

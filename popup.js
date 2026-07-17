@@ -11,23 +11,18 @@ const DEFAULT_SETTINGS = {
   voice: "default",
   highlight: true
 };
-
-const settings = await chrome.storage.local.get(DEFAULT_SETTINGS);
-
-genderSelect.value = settings.gender;
-languageSelect.value = settings.language;
-
 stopButton.disabled = true
 stopButton.style.opacity = 0.5
 
-async function saveSetting(key, value) {
-    await chrome.storage.local.set({ [key]: value });
-}
 
+
+async function saveSetting(key, value) {
+  await chrome.storage.local.set({ [key]: value });
+}
 async function loadLanguages() {
   const response = await fetch("http://localhost:3000/languages");
   const { languages } = await response.json();
-
+  
   for (const language of languages) {
     languageSelect.add(new Option(language.name, language.code));
   }
@@ -40,21 +35,22 @@ function isAudioPlaying(){
   return !stopButton.disabled
 }
 
-loadLanguages();
 
 genderSelect.addEventListener("change", () =>
     saveSetting("gender", genderSelect.value)
 );
 
 languageSelect.addEventListener("change", () =>
-    saveSetting("language", languageSelect.value)
+  saveSetting("language", languageSelect.value)
 );
 
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {language, gender} = await chrome.storage.local.get({
-    gender: 'MALE',
+  const {gender, language} = await chrome.storage.local.get({
+    gender: "MALE",
     language: "auto"
   })
+  genderSelect.value = settings.gender;
+  languageSelect.value = settings.language;
 })
 
 stopButton.addEventListener("click", () => {
@@ -99,3 +95,14 @@ speakButton.addEventListener("click", () => {
     });
   });
 });
+
+async function main(){
+  await loadLanguages();
+  const settings = await chrome.storage.local.get(DEFAULT_SETTINGS);
+  
+  genderSelect.value = settings.gender;
+  languageSelect.value = settings.language;
+
+}
+
+main()

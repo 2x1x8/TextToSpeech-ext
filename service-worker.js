@@ -1,12 +1,13 @@
 const DEFAULT_LANGUAGE = "en";
-async function fetchAudio(text, lang, gender) {
+const DEFAULT_GENDER = "MALE"
+async function fetchAudio(text, language, gender) {
   try {
     const response = await fetch("http://localhost:3000/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
-        language: lang,
+        language: language,
         gender: gender
       })
     });
@@ -41,13 +42,22 @@ async function fetchAudio(text, lang, gender) {
   }
 }
 async function detectLanguage(tabid) {
-  const language = await chrome.tabs.detectLanguage(tabid)
+  let {language} = await chrome.storage.local.get({language: DEFAULT_LANGUAGE})
+  if (language === "auto"){ 
+    language = await chrome.tabs.detectLanguage(tabid)
+  }
   return language === "und"? DEFAULT_LANGUAGE : language;
 }
-async function speak(tabId, text, gender) {
-    const lang = await detectLanguage(tabId);
+async function getGender(){
+  let {gender} = await chrome.storage.local.get({gender: DEFAULT_GENDER})
+  return gender
+}
 
-    const audio = await fetchAudio(text, lang, gender);
+async function speak(tabId, text) {
+
+    const language = await detectLanguage(tabId);
+    const gender = await getGender()
+    const audio = await fetchAudio(text, language, gender);
 
     if (!audio.success)
         return audio;
@@ -105,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'speakText') {
     (async () => {
       try {
-        const result = await speak(message.tabId, message.text, message.gender);
+        const result = await speak(message.tabId, message.text);
         sendResponse(result);
       } catch (err) {
         sendResponse({ success: false, error: err.message });

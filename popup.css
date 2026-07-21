@@ -94,7 +94,7 @@ button {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, opacity 0.12s ease;
 }
 
 button:hover {
@@ -103,6 +103,13 @@ button:hover {
 
 button:active {
   transform: translateY(0);
+  box-shadow: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
   box-shadow: none;
 }
 
@@ -115,6 +122,33 @@ button:active {
 .primary-button:hover {
   background: #4338ca;
   box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
+}
+
+/* ==========================================================================
+   Playback Controls (Rewind / Pause / Forward)
+   ========================================================================== */
+.playback-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.playback-controls .secondary-button {
+  flex: 1;
+}
+
+.secondary-button {
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 13px;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #e0e7ff;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.18);
+}
+
+.secondary-button:hover:disabled {
+  transform: none;
 }
 
 .danger-button {

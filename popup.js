@@ -3,6 +3,7 @@ const speakButton = document.getElementById("speakButton");
 const statusText = document.getElementById("statusText");
 const languageSelect = document.getElementById("languageSelect");
 const genderSelect = document.getElementById("genderSelect");
+const pauseButton = document.getElementById("pauseButton")
 
 const DEFAULT_SETTINGS = {
   gender: "MALE",
@@ -11,10 +12,6 @@ const DEFAULT_SETTINGS = {
   voice: "default",
   highlight: true
 };
-stopButton.disabled = true
-stopButton.style.opacity = 0.5
-
-
 
 async function saveSetting(key, value) {
   await chrome.storage.local.set({ [key]: value });
@@ -30,11 +27,15 @@ async function loadLanguages() {
 function setPlayingState(isPlaying){
   stopButton.disabled = !isPlaying
   stopButton.style.opacity = isPlaying? 1 : 0.5
-}
-function isAudioPlaying(){
-  return !stopButton.disabled
+
+  pauseButton.disabled = !isPlaying
+  pauseButton.style.opacity = isPlaying? 1 : 0.5
 }
 
+async function isAudioPlaying(){
+  const { audioStatus } = await chrome.storage.session.get("audioStatus");
+  return audioStatus === "playing";
+}
 
 genderSelect.addEventListener("change", () =>
     saveSetting("gender", genderSelect.value)
@@ -49,18 +50,33 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     gender: "MALE",
     language: "auto"
   })
-  genderSelect.value = settings.gender;
-  languageSelect.value = settings.language;
+  genderSelect.value = gender;
+  languageSelect.value = language;
+  setPlayingState(await isAudioPlaying())
 })
+
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName === "session" && ("audioStatus" in changes)) {
+    setPlayingState(await isAudioPlaying())
+  }
+  
+});
 
 stopButton.addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (!tab) return;
     chrome.tabs.sendMessage(tab.id, { action: 'stopAudio' });
   });
-  setPlayingState(false)
   statusText.textContent = "Stopped.";
 });
+
+pauseButton.addEventListener("click", () => {
+  chrome.tab.query({ active : true, currentWindow : true}, ([tab]) =>{
+    if (!tab) return;
+    chome.tab.sendMessage(tab.id, {action : "pauseAudio"})
+  })
+  statusText.textContent = "Paused.";
+})
 
 speakButton.addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
